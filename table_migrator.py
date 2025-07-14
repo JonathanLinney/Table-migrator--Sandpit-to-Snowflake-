@@ -7,10 +7,10 @@ from snowflake.connector.pandas_tools import write_pandas
 sql_server_connection_string = (
     "Driver={ODBC Driver 17 for SQL Server};"
     "Server=PSFADHSSTP01.AD.ELC.NHS.UK,1460;"
-    "Database=Data_Lab_NCL_Dev;"
+    "Database=Data_Lab_NCL_Dev;" #necessary for a connection (then actual db/schema/table is specified in the query)
     "Trusted_Connection=yes;"
 )
-sql_table_name = "[Data_Lab_NCL_Dev].[JakeK].[wf_plan]" # Table to pull data from
+sql_table_name = "[Data_Lab_NCL].[dbo].[wf_pwr_kpi]" # Table to pull data from
 
 df = None # Initialize df outside the try block
 
@@ -60,7 +60,7 @@ if df is not None and not df.empty:
     snowflake_schema = "DATA_ENGINEER"
     snowflake_warehouse = "NCL_ANALYTICS_XS"
     snowflake_user = "jonathan.linney@nhs.net"
-    snowflake_table_name = "WF_PLAN_FROM_MMS" # Name for new table in Snowflake
+    snowflake_table_name = "WF_PWR_KPI_JL_TEST" # Name for new table in Snowflake
 
     # Function to map Pandas dtypes to Snowflake types
     def map_pandas_to_snowflake_type(pandas_dtype):
