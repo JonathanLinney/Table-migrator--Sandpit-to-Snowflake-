@@ -7,35 +7,66 @@ from snowflake.connector.pandas_tools import write_pandas
 sql_server_connection_string = (
     "Driver={ODBC Driver 17 for SQL Server};"
     "Server=PSFADHSSTP01.AD.ELC.NHS.UK,1460;"
-    "Database=Data_Lab_NCL_Dev;" #necessary for connection (actual db/schema/table is specified below)
+#    "Database=Data_Lab_NCL_Dev;" #not required here, DB's explicitely declared below
     "Trusted_Connection=yes;"
 )
 
 # List of tables to migrate (SQL Server -> Snowflake)
 tables = [
-    ("[Data_Lab_NCL].[dbo].[wf_pwr_kpi]", "WF_PWR_KPI_JL_TEST"),
-    ("[Data_Lab_NCL].[dbo].[wf_pwr_wte]", "WF_PWR_WTE_JL_TEST")
+    ("[Data_Lab_NCL_Dev].[GrahamR].[dim_Practice_Deprivation]", "DIM_PRACTICE_DEPRIVATION"),
+    ("[Data_Lab_NCL_Dev].[LeighP].[Neighbourhoods2011]", "NEIGHBOURHOODS_2011"),
+    ("[Data_Lab_NCL_Dev].[PeterS].[ConsultantConnect_Org_TrustCode_Lookup]", "CONSULTANTCONNECT_ORG_TRUSTCODE_LOOKUP"),
+    ("[Data_Lab_NCL_Dev].[PeterS].[ConsultantConnect_Org_GPCode_Lookup]", "CONSULTANTCONNECT_ORG_GPCODE_LOOKUP"),
+    ("[NCL].[BLUE\\OgunbiyiV].[GP_LIST_SIZE]", "GP_LIST_SIZE"),
+    ("[NCL].[BLUE\\OgunbiyiV].[GP_LIST_SIZE_CCG]", "GP_LIST_SIZE_CCG"),
+    ("[Data_Lab_SBI].[dbo].[SR_pcn_borough_lookup]", "SR_PCN_BOROUGH_LOOKUP")
 ]
 
-# Function to map Pandas dtypes to Snowflake types
-def map_pandas_to_snowflake_type(pandas_dtype):
-    if pd.api.types.is_integer_dtype(pandas_dtype):
-        return "NUMBER"
-    elif pd.api.types.is_float_dtype(pandas_dtype):
-        return "FLOAT"
-    elif pd.api.types.is_datetime64_any_dtype(pandas_dtype):
-        return "TIMESTAMP_NTZ"
-    elif pd.api.types.is_bool_dtype(pandas_dtype):
-        return "BOOLEAN"
-    else:  # Default to VARCHAR for strings and objects
-        return "VARCHAR(16777216)"  # Max length for VARCHAR
 
-# Generate CREATE TABLE SQL
-def generate_create_table_sql(dataframe, db_name, schema_name, table_name):
+# Function to map SQL Server types to Snowflake types
+
+def map_sqlserver_to_snowflake_type(sql_type, char_length=None):
+    # For character types, use the defined length if available
+    char_types = ['char', 'varchar', 'nchar', 'nvarchar']
+    if sql_type.lower() in char_types and char_length:
+        # If length is -1 or None, use max
+        if str(char_length) == '-1' or char_length is None:
+            return f"VARCHAR(16777216)"
+        else:
+            return f"VARCHAR({char_length})"
+    type_map = {
+        'int': 'NUMBER',
+        'bigint': 'NUMBER',
+        'smallint': 'NUMBER',
+        'tinyint': 'NUMBER',
+        'bit': 'BOOLEAN',
+        'decimal': 'NUMBER',
+        'numeric': 'NUMBER',
+        'float': 'FLOAT',
+        'real': 'FLOAT',
+        'money': 'FLOAT',
+        'smallmoney': 'FLOAT',
+        'date': 'DATE',
+        'datetime': 'TIMESTAMP_NTZ',
+        'datetime2': 'TIMESTAMP_NTZ',
+        'smalldatetime': 'TIMESTAMP_NTZ',
+        'datetimeoffset': 'TIMESTAMP_TZ',
+        'time': 'TIME',
+        'text': 'VARCHAR(16777216)',
+        'ntext': 'VARCHAR(16777216)',
+        'binary': 'BINARY',
+        'varbinary': 'BINARY',
+        'image': 'BINARY',
+    }
+    return type_map.get(sql_type.lower(), 'VARCHAR(16777216)')
+
+# Generate CREATE TABLE SQL using SQL Server types
+def generate_create_table_sql_from_sqlserver(columns_info, db_name, schema_name, table_name):
     columns_sql = []
-    for col_name, col_dtype in dataframe.dtypes.items():
-        snowflake_type = map_pandas_to_snowflake_type(col_dtype)
-        columns_sql.append(f'"{col_name}" {snowflake_type}')
+    for col_name, sql_type, is_nullable, char_length in columns_info:
+        snowflake_type = map_sqlserver_to_snowflake_type(sql_type, char_length)
+        null_str = "NULL" if is_nullable else "NOT NULL"
+        columns_sql.append(f'"{col_name}" {snowflake_type} {null_str}')
     create_sql = f'CREATE OR REPLACE TABLE "{db_name}"."{schema_name}"."{table_name}" (\n'
     create_sql += ",\n".join(columns_sql)
     create_sql += '\n);'
@@ -44,7 +75,7 @@ def generate_create_table_sql(dataframe, db_name, schema_name, table_name):
 # Snowflake Connection Details
 snowflake_account_identifier = "ATKJNCU-NCL"
 snowflake_database = "DATA_LAB_NCL_TRAINING_TEMP"
-snowflake_schema = "DATA_ENGINEER"
+snowflake_schema = "NCL_DICTIONARY"
 snowflake_warehouse = "NCL_ANALYTICS_XS"
 snowflake_user = "jonathan.linney@nhs.net"
 
@@ -79,20 +110,44 @@ try:
             # Fetch all data
             rows = cursor.fetchall()
 
-            # Get column names
+
+            # Get column names and SQL Server types
             columns = [column[0] for column in cursor.description]
+            # Get SQL Server type names using INFORMATION_SCHEMA
+            import re
+            m = re.match(r'\[(.*?)\]\.\[(.*?)\]\.\[(.*?)\]', sql_table_name)
+            if m:
+                db_name, schema_name, tbl_name = m.groups()
+            else:
+                parts = sql_table_name.replace('[','').replace(']','').split('.')
+                db_name, schema_name, tbl_name = parts if len(parts)==3 else (None,None,None)
+
+            columns_info = []
+            if db_name and schema_name and tbl_name:
+                type_query = f"""
+                SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, CHARACTER_MAXIMUM_LENGTH
+                FROM [{db_name}].INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = '{schema_name}' AND TABLE_NAME = '{tbl_name}'
+                """
+                cursor2 = cnxn.cursor()
+                cursor2.execute(type_query)
+                type_rows = cursor2.fetchall()
+                type_map = {row[0]: (row[1], row[2], row[3]) for row in type_rows}
+                for col in columns:
+                    sql_type, is_nullable, char_length = type_map.get(col, ('varchar', 'YES', None))
+                    columns_info.append((col, sql_type, is_nullable == 'YES', char_length))
+            else:
+                for col in columns:
+                    columns_info.append((col, 'varchar', True, None))
 
             print(f"Successfully pulled {len(rows)} rows from {sql_table_name}.")
             print("Columns found:", columns)
+            print("SQL Server types:", columns_info)
 
-            # Convert to a Pandas DataFrame
             df = pd.DataFrame.from_records(rows, columns=columns)
 
             print("\nFirst 5 rows of the DataFrame:")
             print(df.head())
-
-            print("\nData types (inferred by Pandas):")
-            print(df.dtypes)
 
         except pyodbc.Error as ex:
             sqlstate = ex.args[0]
@@ -108,9 +163,10 @@ try:
             try:
                 cursor = conn.cursor()
 
-                # Generate and execute CREATE TABLE statement
-                create_table_sql = generate_create_table_sql(
-                    df,
+
+                # Generate and execute CREATE TABLE statement using SQL Server types
+                create_table_sql = generate_create_table_sql_from_sqlserver(
+                    columns_info,
                     snowflake_database,
                     snowflake_schema,
                     snowflake_table_name
