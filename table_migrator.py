@@ -77,7 +77,7 @@ snowflake_account_identifier = "ATKJNCU-NCL"
 snowflake_database = "DATA_LAB_NCL_TRAINING_TEMP"
 snowflake_schema = "NCL_DICTIONARY"
 snowflake_warehouse = "NCL_ANALYTICS_XS"
-snowflake_user = "jonathan.linney@nhs.net"
+snowflake_user = "<your email goes here>"
 
 # --- Establish Snowflake Connection Once ---
 conn = None
