@@ -13,13 +13,8 @@ sql_server_connection_string = (
 
 # List of tables to migrate (SQL Server -> Snowflake)
 tables = [
-    ("[Data_Lab_NCL_Dev].[GrahamR].[dim_Practice_Deprivation]", "DIM_PRACTICE_DEPRIVATION"),
-    ("[Data_Lab_NCL_Dev].[LeighP].[Neighbourhoods2011]", "NEIGHBOURHOODS_2011"),
-    ("[Data_Lab_NCL_Dev].[PeterS].[ConsultantConnect_Org_TrustCode_Lookup]", "CONSULTANTCONNECT_ORG_TRUSTCODE_LOOKUP"),
-    ("[Data_Lab_NCL_Dev].[PeterS].[ConsultantConnect_Org_GPCode_Lookup]", "CONSULTANTCONNECT_ORG_GPCODE_LOOKUP"),
-    ("[NCL].[BLUE\\OgunbiyiV].[GP_LIST_SIZE]", "GP_LIST_SIZE"),
-    ("[NCL].[BLUE\\OgunbiyiV].[GP_LIST_SIZE_CCG]", "GP_LIST_SIZE_CCG"),
-    ("[Data_Lab_SBI].[dbo].[SR_pcn_borough_lookup]", "SR_PCN_BOROUGH_LOOKUP")
+    ("[Your_DB_1].[Your_Schema_1].[Your_Table_Name_1]", "YOUR_DESTINATION_TABLE_1"),
+    ("[Your_DB_1].[Your_Schema_2].[Your_Table_Name_2]", "YOUR_DESTINATION_TABLE_2"),
 ]
 
 
