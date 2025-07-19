@@ -4,6 +4,7 @@
 
 Extracts all tables from a given tuple of DB.SCHEMA.TABLE combinations 
 from SQL Server Management Studio and copies them into Snowflake
+to the destination tables you specify in the script (details below)
 
 ## Features
 
@@ -72,7 +73,18 @@ snowflake_schema = "YOUR SCHEMA"
 snowflake_warehouse = "YOUR WAREHOUSE"
 snowflake_user = "<your email goes here>"
 
-   
+```
+
+4. Add your SQL table source (Database.Schema.Table_Name); and your Snowflake destination table name here:
+
+```bash
+# List of tables to migrate (SQL Server -> Snowflake)
+tables = [
+    ("[Your_DB_1].[Your_Schema_1].[Your_Table_Name_1]", "YOUR_DESTINATION_TABLE_1"),
+    ("[Your_DB_1].[Your_Schema_2].[Your_Table_Name_2]", "YOUR_DESTINATION_TABLE_2"),
+]
+```
+
 ## Usage
 
 Run the script:
