@@ -6,7 +6,7 @@ from snowflake.connector.pandas_tools import write_pandas
 # --- SQL Server Connection Details ---
 sql_server_connection_string = (
     "Driver={ODBC Driver 17 for SQL Server};"
-    "Server=PSFADHSSTP01.AD.ELC.NHS.UK,1460;"
+    "Server=<your SQL Server Name goes here>;"
 #    "Database=Data_Lab_NCL_Dev;" #not required here, DB's explicitely declared below
     "Trusted_Connection=yes;"
 )
