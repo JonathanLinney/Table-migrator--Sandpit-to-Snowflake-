@@ -48,7 +48,7 @@ sql_server_connection_string = (
     "Driver={your driver name here};"
     "Server=your server name here;"
 
-Trusted Connection is set to "yes" for automatic connection to your SQL Server (change if connecting manually)
+Trusted Connection is set to "yes" for automatic connection to your SQL Server (change if connecting manually):
     "Trusted_Connection=yes;"
 ```
 
@@ -95,7 +95,7 @@ python table_migrator.py
 
 The script will:
 
-Pull tables (including all their data) from SQL Server to Snowflake, preserving column formats 
+Copy tables (including all their data) from SQL Server to Snowflake, preserving column formats 
 
 ## Author
 
