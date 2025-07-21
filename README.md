@@ -62,7 +62,7 @@ snowflake_account_identifier = "ATKJNCU-NCL"
 snowflake_database = "DATA_LAB_NCL_TRAINING_TEMP"
 snowflake_schema = "NCL_DICTIONARY"
 snowflake_warehouse = "NCL_ANALYTICS_XS"
-snowflake_user = "<your email goes here>"
+snowflake_user = "<your email goes here>"  #for logging into SQL Server
 
 To this:
 
