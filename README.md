@@ -71,7 +71,7 @@ snowflake_account_identifier = "YOUR SNOWFLAKE ACCOUNT IDENTIFIER"
 snowflake_database = "YOUR DATABASE"
 snowflake_schema = "YOUR SCHEMA"
 snowflake_warehouse = "YOUR WAREHOUSE"
-snowflake_user = "<your email goes here>"
+snowflake_user = "<your email goes here>"  #for logging into SQL Server
 
 ```
 
