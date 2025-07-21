@@ -40,7 +40,7 @@ Change this:
 
 sql_server_connection_string = (
     "Driver={ODBC Driver 17 for SQL Server};"
-    "Server=PSFADHSSTP01.AD.ELC.NHS.UK,1460;"
+    "Server=<SQL Server name>;"
 
 To this:
 
